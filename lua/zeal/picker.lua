@@ -2,6 +2,11 @@ local docsets = require("zeal.docsets")
 local browser = require("zeal.browser")
 local M = {}
 
+function M.previewer_path()
+	local root_dir = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
+	return vim.fs.joinpath(root_dir, "bin", "previewer.sh")
+end
+
 ---@param docset table
 ---@param cfg table
 ---@param query string?
@@ -24,7 +29,7 @@ function M.pick_entry(docset, cfg, query)
 				['--delimiter'] = "\t",
 				['--with-nth'] = "2..",
 				['--accept-nth'] = "{n}",
-				['--preview'] = "w3m -cols $FZF_PREVIEW_COLUMNS -dump {1}",
+				['--preview'] = M.previewer_path() .. " {1}",
 			},
 			actions = {
 				['default'] = function(selected)
@@ -100,7 +105,7 @@ function M.pick_entry_for_ft(docset_names, ft, cfg, query)
 				['--delimiter'] = "\t",
 				['--with-nth'] = "2..",
 				['--accept-nth'] = "{n}",
-				['--preview'] = "w3m -cols $FZF_PREVIEW_COLUMNS -dump {1}",
+				['--preview'] = M.previewer_path() .. " {1}",
 			},
 			actions = {
 				['default'] = function(selected)
