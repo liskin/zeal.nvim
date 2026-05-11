@@ -4,7 +4,8 @@ local M = {}
 
 ---@param docset table
 ---@param cfg table
-function M.pick_entry(docset, cfg)
+---@param query string?
+function M.pick_entry(docset, cfg, query)
 	local entries = docsets.entries(docset)
 	if #entries == 0 then
 		vim.notify("zeal.nvim: no entries found in " .. docset.name, vim.log.levels.WARN)
@@ -16,6 +17,7 @@ function M.pick_entry(docset, cfg)
 		local items = vim.tbl_map(function(e) return e.display end, entries)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal [" .. docset.name .. "] > ",
+			query = query,
 			fzf_opts = {
 				['--accept-nth'] = "{n}",
 			},
@@ -30,6 +32,7 @@ function M.pick_entry(docset, cfg)
 	end
 
 	if cfg.picker.type == "default" then
+		-- TODO: filter by query
 		vim.ui.select(entries, {
 			prompt = "Zeal [" .. docset.name .. "]:",
 			format_item = function(e)
@@ -53,6 +56,7 @@ function M.pick_entry(docset, cfg)
 
 	snacks.picker({
 		items = items,
+		pattern = query, -- XXX: untested
 		format = function(e)
 			return {
 				{ e.text, "SnacksPickerFile" },
@@ -71,7 +75,8 @@ end
 ---@param docset_names table list of docset name strings
 ---@param ft string
 ---@param cfg table
-function M.pick_entry_for_ft(docset_names, ft, cfg)
+---@param query string?
+function M.pick_entry_for_ft(docset_names, ft, cfg, query)
 	local entries = docsets.entries_for_ft(docset_names, cfg)
 	if #entries == 0 then
 		vim.notify("zeal.nvim: no entries found for filetype " .. ft, vim.log.levels.WARN)
@@ -83,6 +88,7 @@ function M.pick_entry_for_ft(docset_names, ft, cfg)
 		local items = vim.tbl_map(function(e) return e.display end, entries)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal [" .. ft .. "] > ",
+			query = query,
 			fzf_opts = {
 				['--accept-nth'] = "{n}",
 			},
@@ -97,6 +103,7 @@ function M.pick_entry_for_ft(docset_names, ft, cfg)
 	end
 
 	if cfg.picker.type == "default" then
+		-- TODO: filter by query
 		vim.ui.select(entries, {
 			prompt = "Zeal [" .. ft .. "]:",
 			format_item = function(e)
@@ -120,6 +127,7 @@ function M.pick_entry_for_ft(docset_names, ft, cfg)
 
 	snacks.picker({
 		items = items,
+		pattern = query, -- XXX: untested
 		format = function(e)
 			return {
 				{ e.text, "SnacksPickerFile" },
