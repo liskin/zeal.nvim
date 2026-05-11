@@ -14,12 +14,17 @@ function M.pick_entry(docset, cfg, query)
 
 	if cfg.picker.type == "fzf-lua" then
 		local fzf_lua = require("fzf-lua")
-		local items = vim.tbl_map(function(e) return e.display end, entries)
+		local items = vim.tbl_map(function(e)
+			return string.format("%s\t%s", e.path, e.display)
+		end, entries)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal [" .. docset.name .. "] > ",
 			query = query,
 			fzf_opts = {
+				['--delimiter'] = "\t",
+				['--with-nth'] = "2..",
 				['--accept-nth'] = "{n}",
+				['--preview'] = "w3m -cols $FZF_PREVIEW_COLUMNS -dump {1}",
 			},
 			actions = {
 				['default'] = function(selected)
@@ -85,12 +90,17 @@ function M.pick_entry_for_ft(docset_names, ft, cfg, query)
 
 	if cfg.picker.type == "fzf-lua" then
 		local fzf_lua = require("fzf-lua")
-		local items = vim.tbl_map(function(e) return e.display end, entries)
+		local items = vim.tbl_map(function(e)
+			return string.format("%s\t%s", e.path, e.display)
+		end, entries)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal [" .. ft .. "] > ",
 			query = query,
 			fzf_opts = {
+				['--delimiter'] = "\t",
+				['--with-nth'] = "2..",
 				['--accept-nth'] = "{n}",
+				['--preview'] = "w3m -cols $FZF_PREVIEW_COLUMNS -dump {1}",
 			},
 			actions = {
 				['default'] = function(selected)
