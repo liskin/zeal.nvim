@@ -11,6 +11,24 @@ function M.pick_entry(docset, cfg)
 		return
 	end
 
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(e) return e.display end, entries)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal [" .. docset.name .. "] > ",
+			fzf_opts = {
+				['--accept-nth'] = "{n}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = entries[tonumber(selected[1]) + 1]
+					browser.open(choice, cfg)
+				end,
+			},
+		})
+		return
+	end
+
 	if cfg.picker.type == "default" then
 		vim.ui.select(entries, {
 			prompt = "Zeal [" .. docset.name .. "]:",
@@ -57,6 +75,24 @@ function M.pick_entry_for_ft(docset_names, ft, cfg)
 	local entries = docsets.entries_for_ft(docset_names, cfg)
 	if #entries == 0 then
 		vim.notify("zeal.nvim: no entries found for filetype " .. ft, vim.log.levels.WARN)
+		return
+	end
+
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(e) return e.display end, entries)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal [" .. ft .. "] > ",
+			fzf_opts = {
+				['--accept-nth'] = "{n}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = entries[tonumber(selected[1]) + 1]
+					browser.open(choice, cfg)
+				end,
+			},
+		})
 		return
 	end
 
@@ -112,6 +148,24 @@ function M.pick_docset(cfg)
 		return
 	end
 
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(d) return d.name end, all)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal docsets> ",
+			fzf_opts = {
+				['--accept-nth'] = "{n}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = all[tonumber(selected[1]) + 1]
+					M.pick_entry(choice, cfg)
+				end,
+			},
+		})
+		return
+	end
+
 	if cfg.picker.type == "default" then
 		vim.ui.select(all, {
 			prompt = "Zeal Docsets:",
@@ -155,6 +209,24 @@ end
 ---@param cfg table
 ---@param callback function
 function M.pick_download(languages, cfg, callback)
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(l) return l.name end, languages)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal Docsets > ",
+			fzf_opts = {
+				['--accept-nth'] = "{n}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = languages[tonumber(selected[1]) + 1]
+					callback(cfg, choice.name)
+				end,
+			},
+		})
+		return
+	end
+
 	if cfg.picker.type == "default" then
 		vim.ui.select(languages, {
 			prompt = "Zeal Docsets",
