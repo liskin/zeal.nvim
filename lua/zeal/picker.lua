@@ -2,16 +2,47 @@ local docsets = require("zeal.docsets")
 local browser = require("zeal.browser")
 local M = {}
 
+function M.previewer_path()
+	local root_dir = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
+	return vim.fs.joinpath(root_dir, "bin", "previewer.sh")
+end
+
 ---@param docset table
 ---@param cfg table
-function M.pick_entry(docset, cfg)
+---@param query string?
+function M.pick_entry(docset, cfg, query)
 	local entries = docsets.entries(docset)
 	if #entries == 0 then
 		vim.notify("zeal.nvim: no entries found in " .. docset.name, vim.log.levels.WARN)
 		return
 	end
 
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(e)
+			return string.format("%s\t%s", e.path, e.display)
+		end, entries)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal [" .. docset.name .. "] > ",
+			query = query,
+			fzf_opts = {
+				['--delimiter'] = "\t",
+				['--with-nth'] = "2..",
+				['--accept-nth'] = "{n}",
+				['--preview'] = M.previewer_path() .. " {1}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = entries[tonumber(selected[1]) + 1]
+					browser.open(choice, cfg)
+				end,
+			},
+		})
+		return
+	end
+
 	if cfg.picker.type == "default" then
+		-- TODO: filter by query
 		vim.ui.select(entries, {
 			prompt = "Zeal [" .. docset.name .. "]:",
 			format_item = function(e)
@@ -35,6 +66,7 @@ function M.pick_entry(docset, cfg)
 
 	snacks.picker({
 		items = items,
+		pattern = query, -- XXX: untested
 		format = function(e)
 			return {
 				{ e.text, "SnacksPickerFile" },
@@ -53,14 +85,40 @@ end
 ---@param docset_names table list of docset name strings
 ---@param ft string
 ---@param cfg table
-function M.pick_entry_for_ft(docset_names, ft, cfg)
+---@param query string?
+function M.pick_entry_for_ft(docset_names, ft, cfg, query)
 	local entries = docsets.entries_for_ft(docset_names, cfg)
 	if #entries == 0 then
 		vim.notify("zeal.nvim: no entries found for filetype " .. ft, vim.log.levels.WARN)
 		return
 	end
 
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(e)
+			return string.format("%s\t%s", e.path, e.display)
+		end, entries)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal [" .. ft .. "] > ",
+			query = query,
+			fzf_opts = {
+				['--delimiter'] = "\t",
+				['--with-nth'] = "2..",
+				['--accept-nth'] = "{n}",
+				['--preview'] = M.previewer_path() .. " {1}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = entries[tonumber(selected[1]) + 1]
+					browser.open(choice, cfg)
+				end,
+			},
+		})
+		return
+	end
+
 	if cfg.picker.type == "default" then
+		-- TODO: filter by query
 		vim.ui.select(entries, {
 			prompt = "Zeal [" .. ft .. "]:",
 			format_item = function(e)
@@ -84,6 +142,7 @@ function M.pick_entry_for_ft(docset_names, ft, cfg)
 
 	snacks.picker({
 		items = items,
+		pattern = query, -- XXX: untested
 		format = function(e)
 			return {
 				{ e.text, "SnacksPickerFile" },
@@ -109,6 +168,24 @@ function M.pick_docset(cfg)
 
 	if #all == 1 then
 		M.pick_entry(all[1], cfg)
+		return
+	end
+
+	if cfg.picker.type == "fzf-lua" then
+		local fzf_lua = require("fzf-lua")
+		local items = vim.tbl_map(function(d) return d.name end, all)
+		fzf_lua.fzf_exec(items, {
+			prompt = "Zeal docsets> ",
+			fzf_opts = {
+				['--accept-nth'] = "{n}",
+			},
+			actions = {
+				['default'] = function(selected)
+					local choice = all[tonumber(selected[1]) + 1]
+					M.pick_entry(choice, cfg)
+				end,
+			},
+		})
 		return
 	end
 
