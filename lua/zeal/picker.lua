@@ -13,21 +13,15 @@ function M.pick_entry(docset, cfg)
 
 	if cfg.picker.type == "fzf-lua" then
 		local fzf_lua = require("fzf-lua")
-
-		local items = {}
-		for i, e in ipairs(entries) do
-			table.insert(items, string.format("%d\t%s", i, e.display))
-		end
-
+		local items = vim.tbl_map(function(e) return e.display end, entries)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal [" .. docset.name .. "] > ",
 			fzf_opts = {
-				['--with-nth'] = "2..",
-				['--accept-nth'] = "1",
+				['--accept-nth'] = "{n}",
 			},
 			actions = {
 				['default'] = function(selected)
-					local choice = entries[tonumber(selected[1])]
+					local choice = entries[tonumber(selected[1]) + 1]
 					browser.open(choice, cfg)
 				end,
 			},
@@ -86,21 +80,15 @@ function M.pick_entry_for_ft(docset_names, ft, cfg)
 
 	if cfg.picker.type == "fzf-lua" then
 		local fzf_lua = require("fzf-lua")
-
-		local items = {}
-		for i, e in ipairs(entries) do
-			table.insert(items, string.format("%d\t%s", i, e.display))
-		end
-
+		local items = vim.tbl_map(function(e) return e.display end, entries)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal [" .. ft .. "] > ",
 			fzf_opts = {
-				['--with-nth'] = "2..",
-				['--accept-nth'] = "1",
+				['--accept-nth'] = "{n}",
 			},
 			actions = {
 				['default'] = function(selected)
-					local choice = entries[tonumber(selected[1])]
+					local choice = entries[tonumber(selected[1]) + 1]
 					browser.open(choice, cfg)
 				end,
 			},
@@ -162,21 +150,15 @@ function M.pick_docset(cfg)
 
 	if cfg.picker.type == "fzf-lua" then
 		local fzf_lua = require("fzf-lua")
-
-		local items = {}
-		for i, d in ipairs(all) do
-			table.insert(items, string.format("%d\t%s", i, d.name))
-		end
-
+		local items = vim.tbl_map(function(d) return d.name end, all)
 		fzf_lua.fzf_exec(items, {
 			prompt = "Zeal docsets> ",
 			fzf_opts = {
-				['--with-nth'] = "2..",
-				['--accept-nth'] = "1",
+				['--accept-nth'] = "{n}",
 			},
 			actions = {
 				['default'] = function(selected)
-					local choice = all[tonumber(selected[1])]
+					local choice = all[tonumber(selected[1]) + 1]
 					M.pick_entry(choice, cfg)
 				end,
 			},
