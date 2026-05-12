@@ -40,7 +40,7 @@ function M.setup(opts)
 	end
 end
 
-function M.search(docset_name)
+function M.search(docset_name, query)
 	local picker = require("zeal.picker")
 
 	if not docset_name then
@@ -50,13 +50,13 @@ function M.search(docset_name)
 
 	local docset = require("zeal.docsets").find(docset_name, M.config)
 	if docset then
-		picker.pick_entry(docset, M.config)
+		picker.pick_entry(docset, M.config, query)
 	else
 		vim.notify("zeal.nvim: no docset found matching '" .. docset_name .. "'", vim.log.levels.WARN)
 	end
 end
 
-function M.search_ft()
+function M.search_ft(query)
 	if not M.config.ft_map then
 		vim.notify("zeal.nvim: ft_map not configured", vim.log.levels.WARN)
 		return
@@ -70,13 +70,13 @@ function M.search_ft()
 	end
 
 	local picker = require("zeal.picker")
-	picker.pick_entry_for_ft(mapped, ft, M.config)
+	picker.pick_entry_for_ft(mapped, ft, M.config, query)
 end
 
 vim.api.nvim_create_user_command("Zeal", function(opts)
-	M.search(opts.args ~= "" and opts.args or nil)
+	M.search(opts.fargs[1], opts.fargs[2])
 end, {
-	nargs = "?",
+	nargs = "*",
 	desc = "Search Zeal docsets",
 })
 
